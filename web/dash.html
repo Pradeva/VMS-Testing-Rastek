@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NVR JS : Dashboard</title>
+    <meta name="theme-color" content="#3b5998">
+  <!--Style-->
+<link rel="stylesheet" href="static/css/default.css" />
+<link rel="stylesheet" href="static/css/font-awesome.min.css">
+
+<!--jquery-->
+<link rel="stylesheet" href="static/css/jquery-ui.min.css">
+<script src="static/js/jquery-3.6.0.min.js"></script>
+<script src="static/js/jquery-ui.min.js"></script>
+
+<!--Day JS-->
+<script src="static/js/customParseFormat.js"></script>
+<script src="static/js/dayjs.min.js"></script>
+
+<!--timeline-->
+<link rel="stylesheet" href="static/js/vis-timeline-graph2d.min.css" />
+<script src="static/js/vis-timeline-graph2d.min.js"></script>
+
+<!--scripts-->
+<script src="static/js/scripts.js"></script>
+<script src="static/js/canvas2image.js"></script>
+
+<!--socket io-->
+<script src="static/js/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div class="topPanel">
+      <img src="static/images/LogoSmall.png" style="margin-top: 23px;">
+      <table style="float: right; height: 100%;">
+        <tr>
+          <td style="vertical-align: middle;">
+            <img src="static/images/CPU.png" style="width: 38px;">
+          </td>
+          <td style="vertical-align: middle;" id="CPU">
+           &nbsp;
+          </td>
+          <td style="vertical-align: middle;">
+            &nbsp;&nbsp;&nbsp;
+          </td>
+          <td style="vertical-align: middle;">
+            <img src="static/images/RAM.png" style="width: 38px;">
+          </td>
+          <td style="vertical-align: middle;" id="RAM">
+            &nbsp;
+          </td>
+          <td style="vertical-align: middle;">
+            &nbsp;&nbsp;&nbsp;
+          </td>
+          <td style="vertical-align: middle;">
+            <img src="static/images/HDD.png" style="width: 38px;">
+          </td>
+          <td style="vertical-align: middle;" id="DISK">
+            &nbsp;
+          </td>
+        </tr>
+      </table>
+
+    </div>
+    <div class="sideBar">
+     
+      {{#each cameras}}
+      <div class="cameraPanel">
+        <div class="title">{{this.name}}</div>
+        <table class="cameraPanelOption">
+          <tr>
+            <td>
+              <img class="snapShot" src="/snapshot/{{@key}}/120" />
+            </td>
+            <td>
+              <button onclick="StartLive('{{@key}}','{{this.name}}','{{this.liveConfig.codecString}}')" class="videoButton"><i class="fa fa-play"></i> Live</button>
+              <button onclick="StartTimeline('{{@key}}','{{this.name}}')" class="videoButton"><i class="fa fa-history"></i> Timeline</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+      {{/each}}
+    </div>
+
+    <template id="liveView">
+        <video class="videoLive"></video>
+    </template>
+
+    <template id="scrub">
+      <video class="videoScrub" type="video/mp4" src="" preload="true" muted ></video>
+      <div id="timeline"></div>
+  </template>
+
+  <script>
+    dayjs.extend(window.dayjs_plugin_customParseFormat);
+    StartStats();
+  </script>
+  </body>
+</html>
