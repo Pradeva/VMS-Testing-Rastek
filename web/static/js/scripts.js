@@ -196,30 +196,31 @@ function StartLive(ID, Name, Codec) {
 	copy.append(contents);
 	const VideoElement = copy.find('video');
 	const VE5 = $(VideoElement)[0];
-	copy.dialog({
-		width: 520,
-		height: 410,
-		title: Name + ' (Live)',
-		close: function () {
-			socket.disconnect();
-			VE5.pause();
-			VE5.remove();
-		},
-		buttons: {
-			'Full Screen': function () {
-				goFullscreen(VE5);
-			},
-			Snapshot: function () {
-				const canvas = document.createElement('canvas');
-				canvas.width = VE5.videoWidth;
-				canvas.height = VE5.videoHeight;
-				const ctx = canvas.getContext('2d');
-				ctx.drawImage(VE5, 0, 0, canvas.width, canvas.height);
-				Canvas2Image.saveAsJPEG(canvas);
-				canvas.remove();
-			}
-		}
-	});
+	$('body').append(VE5);
+	// copy.dialog({
+	// 	width: 520,
+	// 	height: 410,
+	// 	// title: Name + ' (Live)',
+	// 	close: function () {
+	// 		socket.disconnect();
+	// 		VE5.pause();
+	// 		VE5.remove();
+	// 	},
+	// 	// buttons: {
+	// 	// 	'Full Screen': function () {
+	// 	// 		goFullscreen(VE5);
+	// 	// 	},
+	// 	// 	Snapshot: function () {
+	// 	// 		const canvas = document.createElement('canvas');
+	// 	// 		canvas.width = VE5.videoWidth;
+	// 	// 		canvas.height = VE5.videoHeight;
+	// 	// 		const ctx = canvas.getContext('2d');
+	// 	// 		ctx.drawImage(VE5, 0, 0, canvas.width, canvas.height);
+	// 	// 		Canvas2Image.saveAsJPEG(canvas);
+	// 	// 		canvas.remove();
+	// 	// 	}
+	// 	// }
+	// });
 
 	if (!MediaSource.isTypeSupported(Codec)) {
 		alert('Unsupported mime type');

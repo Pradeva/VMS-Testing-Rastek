@@ -1,6 +1,4 @@
-module.exports = {
-	/* System Settings */
-	system: {
+module.exports = { /* System Settings */ system: {
 		/* Username */
 		username: "admin",
 		/* bcrypt password (default: admin) */

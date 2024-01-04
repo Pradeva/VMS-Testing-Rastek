@@ -10,7 +10,6 @@ const MP4Frag = require('./core/MP4Frag');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const sql = require('sqlite3');
 const osu = require('node-os-utils');
 const dayjs = require('dayjs');
 const queue = require('queue-fifo');
@@ -33,7 +32,6 @@ if (!fs.existsSync(path.join(os.homedir(), 'nvrjs.config.js'))) {
 const config = require(path.join(os.homedir(), 'nvrjs.config.js'));
 console.log(' - Config loaded: ' + path.join(os.homedir(), 'nvrjs.config.js'));
 
-let SQL;
 const SensorTimestamps = {};
 
 console.log(' - Checking volumes and ffmpeg.');
@@ -70,32 +68,6 @@ if (!fs.existsSync(config.system.ffmpegLocation)) {
 	);
 	process.exit(0);
 }
-
-// CreateOrConnectSQL(() => {
-// 	console.log(' - Starting purge interval.');
-// 	setInterval(
-// 		purgeContinuous,
-// 		1000 * 3600 * config.system.continuousPurgeIntervalHours
-// 	);
-// 	purgeContinuous();
-// });
-
-console.log(' - Starting data write queue.');
-const FIFO = new queue();
-function Commit() {
-	if (!FIFO.isEmpty()) {
-		const Query = FIFO.dequeue();
-		const STMT = SQL.prepare(Query.statement, () => {
-			STMT.run(Query.params, () => {
-				STMT.finalize();
-				Commit();
-			});
-		});
-	} else {
-		setTimeout(Commit, 10000);
-	}
-}
-setTimeout(Commit, 10000);
 
 const IOLimiter = RateLimiter({
 	windowMs: 2000,
@@ -203,46 +175,6 @@ App.get('/api/:APIKey/cameras', (req, res) => {
 	}
 });
 
-// Event Creation
-App.post('/api/:APIKey/event/:CameraID', (req, res) => {
-	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
-		if (config.cameras[req.params.CameraID].continuous) {
-			if (!SensorTimestamps.hasOwnProperty(req.body.sensorId)) {
-				FIFO.enqueue({
-					statement:
-						'INSERT INTO Events(EventID,CameraID,Name,SensorID,Date) VALUES(?,?,?,?,?)',
-					params: [
-						generateUUID(),
-						req.params.CameraID,
-						req.body.name,
-						req.body.sensorId,
-						req.body.date
-					]
-				});
-				res.status(204);
-				res.end();
-
-				SensorTimestamps[req.body.sensorId] = dayjs().unix();
-
-				setTimeout(() => {
-					delete SensorTimestamps[req.body.sensorId];
-				}, 1000 * config.system.eventSensorIdCoolOffSeconds);
-
-				return;
-			} else {
-				res.status(429);
-				res.end();
-			}
-		} else {
-			res.status(501);
-			res.end();
-		}
-	} else {
-		res.status(401);
-		res.end();
-	}
-});
-
 // Snapshot
 App.get('/snapshot/:CameraID/:Width', CheckAuthMW, (req, res) => {
 	getSnapShot(res, req.params.CameraID, req.params.Width);
@@ -303,78 +235,12 @@ function getSnapShot(Res, CameraID, Width) {
 	});
 }
 
-// Get Event Data
-App.get('/api/:APIKey/geteventdata/:CameraID/:Start/:End', (req, res) => {
-	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
-		GetEventData(res, req.params.CameraID, req.params.Start, req.params.End);
-	} else {
-		res.status(401);
-		res.end();
-	}
-});
-
-App.get('/geteventdata/:CameraID/:Start/:End', CheckAuthMW, (req, res) => {
-	GetEventData(res, req.params.CameraID, req.params.Start, req.params.End);
-});
-
-function GetEventData(res, CameraID, Start, End) {
-	const Data = {};
-
-	let STMT = SQL.prepare(
-		'SELECT * FROM Segments WHERE CameraID = ? AND Start >= ? AND End <= ?'
-	);
-	STMT.all([CameraID, parseInt(Start), parseInt(End)], (err, rows) => {
-		Data.segments = rows;
-		STMT.finalize();
-		STMT = SQL.prepare(
-			'SELECT * FROM Events WHERE CameraID = ? AND Date >= ? AND Date <= ?'
-		);
-		STMT.all([CameraID, parseInt(Start), parseInt(End)], (err, rows) => {
-			Data.events = rows;
-			STMT.finalize();
-			res.type('application/json');
-			res.status(200);
-			res.end(JSON.stringify(Data));
-		});
-	});
-}
-
 const Processors = {};
 const Cameras = Object.keys(config.cameras);
 Cameras.forEach((cameraID) => {
 	const Cam = config.cameras[cameraID];
 	InitCamera(Cam, cameraID);
 });
-
-function CreateOrConnectSQL(CB) {
-	const Path = path.join(
-		config.system.storageVolume,
-		'NVRJS_SYSTEM',
-		'data.db'
-	);
-
-	if (!fs.existsSync(Path)) {
-		console.log(' - Creating db structure.');
-		SQL = new sql.Database(Path, () => {
-			SQL.run(
-				'CREATE TABLE Segments(SegmentID TEXT, CameraID TEXT, FileName TEXT, Start NUMERIC, End NUMERIC)',
-				() => {
-					SQL.run(
-						'CREATE TABLE Events(EventID TEXT,CameraID TEXT, Name TEXT, SensorID TEXT, Date NUMERIC)',
-						() => {
-							SQL.close();
-							console.log(' - Connecting to db.');
-							SQL = new sql.Database(Path, CB);
-						}
-					);
-				}
-			);
-		});
-	} else {
-		console.log(' - Connecting to db.');
-		SQL = new sql.Database(Path, CB);
-	}
-}
 
 function FFMPEGExitDueToError(Code, Signal) {
 	if (Code == null && Signal === 'SIGKILL') {
@@ -509,11 +375,6 @@ function InitCamera(Cam, cameraID) {
 					'YYYY-MM-DDTHH-mm-ss'
 				).unix();
 				const End = dayjs().unix();
-				FIFO.enqueue({
-					statement:
-						'INSERT INTO Segments(SegmentID,CameraID,FileName,Start,End) VALUES(?,?,?,?,?)',
-					params: [generateUUID(), cameraID, FileName, Start, End]
-				});
 			}
 		});
 	};
@@ -576,32 +437,6 @@ function CheckAuthMW(req, res, next) {
 		}
 	}
 }
-
-// async function purgeContinuous() {
-// 	console.log(' - Purging data.');
-// 	const Date = dayjs().subtract(config.system.continuousDays, 'day').unix();
-// 	const STMT = SQL.prepare('SELECT * FROM Segments WHERE Start <= ?');
-// 	STMT.all([Date], (err, rows) => {
-// 		rows.forEach((S) => {
-// 			fs.unlinkSync(
-// 				path.join(
-// 					config.system.storageVolume,
-// 					'NVRJS_CAMERA_RECORDINGS',
-// 					S.CameraID,
-// 					S.FileName
-// 				)
-// 			);
-// 		});
-// 		FIFO.enqueue({
-// 			statement: `DELETE FROM Segments WHERE Start <= ${Date}`,
-// 			params: []
-// 		});
-// 		FIFO.enqueue({
-// 			statement: `DELETE FROM Events WHERE Date <= ${Date}`,
-// 			params: []
-// 		});
-// 	});
-// }
 
 HTTP.listen(config.system.interfacePort);
 console.log(' - NVR JS is Ready!');
