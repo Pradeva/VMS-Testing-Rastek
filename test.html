@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="http://127.0.0.1:7878/static/js/socket.io.min.js"></script>
+</head>
+<body>
+    <video style="width: 300px; height: 300px;" id="videoElement"></video>
+    <script>
+        const VE = document.getElementById("videoElement")
+        const mediaSource = new MediaSource();
+        const DataURL = URL.createObjectURL(mediaSource);
+        const Codec = "video/mp4; codecs=\"avc1.64001f\""
+        VE.src = DataURL;
+
+        mediaSource.addEventListener('sourceopen', function (e) {
+            buffer = mediaSource.addSourceBuffer(Codec);
+            buffer.mode = 'sequence';
+            buffer.addEventListener('updateend', function (e) {
+                if (
+                    mediaSource.duration !== Number.POSITIVE_INFINITY &&
+                    VE.currentTime === 0 &&
+                    mediaSource.duration > 0
+                ) {
+                    VE.currentTime = mediaSource.duration - 1;
+                    mediaSource.duration = Number.POSITIVE_INFINITY;
+                }
+
+                VE.play();
+            });
+
+            socket = io('http://127.0.0.1:7878/', { path: '/streams/CAM-018'});
+            socket.on('segment', function (data) {
+                data = new Uint8Array(data);
+                buffer.appendBuffer(data);
+            });
+        });
+    </script>
+</body>
+</html>

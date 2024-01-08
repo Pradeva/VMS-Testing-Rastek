@@ -1,0 +1,187 @@
+@font-face {
+	font-family: 'Roboto';
+	src: url('fonts/Roboto-Light.ttf');
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+}
+
+body {
+	font-size: 16px;
+	font-family: Roboto, HelveticaNeue-Light, 'Calibri Light';
+}
+
+.floatingDiv {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	overflow: hidden;
+	min-height: 400px;
+	min-width: 500px;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+	border-color: #3b5998;
+	border-width: 2px;
+	border-style: solid;
+	-webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	background-color: rgb(235,235,235);
+}
+
+.floatingDiv .title {
+	width: 100%;
+	height: 30px;
+	line-height: 30px;
+	padding-left: 5px;
+	color: white;
+	background-color: #3b5998;
+}
+
+input[type='button'] {
+	background-color: #3b5998;
+	color: white;
+	border: none;
+	padding: 5px;
+	min-width: 80px;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+input[type='password'], input[type='text'] {
+	border-style: solid;
+	border-width: 1px;
+	border-color: #3b5998;
+	border-spacing: 10px;
+	border-radius: 4px;
+	height: 20px;
+}
+
+.topPanel {
+	color: white;
+	padding-right: 30px;
+  padding-left: 30px;
+	box-sizing: border-box;
+  background-color: #3b5998;
+  height: 100px;
+  border: none;
+	border-bottom-color: #3b5998;
+	border-bottom-width: 3px;
+	border-bottom-style: solid;
+  -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+  position: relative;
+}
+
+.logo {
+	width: 100%;
+	height: 125px;
+	background-color:  #6D798C;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.sideBar {
+	width: 270px;
+	height: 100%;
+	border: none;
+	background-color: rgb(235,235,235);
+	-webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	text-align: center;
+}
+
+.sideBar-Content {
+	width: 100%;
+	height: 100% - 125px;
+	background-image: linear-gradient(red, yellow);
+}
+
+.sideBar .cameraPanel {
+	width: 90%;
+	border-color: #3b5998;
+	border-style: solid;
+	height: 130px;
+	border-width: 2px;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	margin: auto;
+	background-color: white;
+	-webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	margin-bottom: 10px;
+	overflow: hidden;
+}
+
+.cameraPanel .title {
+	width: 100%;
+	height: 30px;
+	line-height: 30px;
+	text-align: left;
+	padding-left: 5px;
+	font-family: Roboto;
+	color: white;
+	background-color: #3b5998;
+
+}
+
+.cameraPanel .snapShot {
+	width: 120px;
+	border-radius: 4px;
+}
+.cameraPanel .cameraPanelOption {
+	padding: 5px;
+	margin-top: 5px;
+}
+
+.videoLive {
+	width: 100%;
+	height: 95%;
+	margin: auto;
+}
+.videoScrub {
+	width: 100%;
+	height: 70%;
+	margin: auto;
+}
+
+.ui-dialog-buttonset {
+	font-size: 12px;
+}
+
+.videoButton {
+	width: 100%;
+	height: 30px;
+	margin-bottom: 5px;
+}
+
+.ui-widget.ui-widget-content{
+	border: 2px solid #3b5998 !important;
+	overflow: hidden !important;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	padding: 0px;
+	-webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+}
+
+.ui-widget-header{
+	border: none !important;
+	background: #3b5998 !important;
+	color: white !important;
+	font-weight: normal !important;
+	border-radius: 0px !important;
+}
