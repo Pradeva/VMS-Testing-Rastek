@@ -120,7 +120,7 @@ App.post('/login', (req, res) => {
 	}
 });
 
-App.get('/dashboard', CheckAuthMW, (req, res) => {
+App.get('/dashboard', (req, res) => {
 	res.type('text/html');
 	res.status(200);
 	res.end(CompiledPages.Dash(config));
@@ -135,7 +135,7 @@ App.get('/api/:APIKey/systeminfo', (req, res) => {
 		res.end();
 	}
 });
-App.get('/systeminfo', CheckAuthMW, (req, res) => {
+App.get('/systeminfo', (req, res) => {
 	getSystemInfo(req, res);
 });
 
@@ -176,7 +176,7 @@ App.get('/api/:APIKey/cameras', (req, res) => {
 });
 
 // Snapshot
-App.get('/snapshot/:CameraID/:Width', CheckAuthMW, (req, res) => {
+App.get('/snapshot/:CameraID/:Width', (req, res) => {
 	getSnapShot(res, req.params.CameraID, req.params.Width);
 });
 
@@ -273,7 +273,6 @@ function InitCamera(Cam, cameraID) {
 
 	App.use(
 		'/segments/' + cameraID,
-		CheckAuthMW,
 		express.static(
 			path.join(
 				config.system.storageVolume,
@@ -338,9 +337,7 @@ function InitCamera(Cam, cameraID) {
 		};
 		const Socket = io(HTTP, IOptions);
 		Socket.on('connection', (ClientSocket) => {
-			if (CheckAuthMW(ClientSocket)) {
-				ClientSocket.emit('segment', MP4F.initialization);
-			}
+			ClientSocket.emit('segment', MP4F.initialization);
 		});
 
 		MP4F.on('segment', (data) => {
@@ -407,36 +404,36 @@ function generateUUID() {
 	});
 }
 
-function CheckAuthMW(req, res, next) {
-	if (res === undefined && next === undefined) {
-		if (req.handshake.headers.cookie !== undefined) {
-			const CS = cookie.parse(req.handshake.headers.cookie);
-			const Signed = cookieparser.signedCookies(CS, config.system.cookieKey);
-			if (
-				Signed.Authentication === undefined ||
-				Signed.Authentication !== 'Success'
-			) {
-				req.disconnect();
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			req.disconnect();
-			return false;
-		}
-	} else {
-		if (
-			req.signedCookies.Authentication === undefined ||
-			req.signedCookies.Authentication !== 'Success'
-		) {
-			res.status(401);
-			res.end();
-		} else {
-			next();
-		}
-	}
-}
+// function CheckAuthMW(req, res, next) {
+// 	if (res === undefined && next === undefined) {
+// 		if (req.handshake.headers.cookie !== undefined) {
+// 			const CS = cookie.parse(req.handshake.headers.cookie);
+// 			const Signed = cookieparser.signedCookies(CS, config.system.cookieKey);
+// 			if (
+// 				Signed.Authentication === undefined ||
+// 				Signed.Authentication !== 'Success'
+// 			) {
+// 				req.disconnect();
+// 				return false;
+// 			} else {
+// 				return true;
+// 			}
+// 		} else {
+// 			req.disconnect();
+// 			return false;
+// 		}
+// 	} else {
+// 		if (
+// 			req.signedCookies.Authentication === undefined ||
+// 			req.signedCookies.Authentication !== 'Success'
+// 		) {
+// 			res.status(401);
+// 			res.end();
+// 		} else {
+// 			next();
+// 		}
+// 	}
+// }
 
 HTTP.listen(config.system.interfacePort);
 console.log(' - NVR JS is Ready!');
