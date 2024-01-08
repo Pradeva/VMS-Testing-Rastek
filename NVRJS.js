@@ -18,19 +18,19 @@ dayjs.extend(customParseFormat);
 const RateLimiter = require('express-rate-limit');
 
 console.log(' - Checking config.');
-if (!fs.existsSync(path.join(os.homedir(), 'nvrjs.config.js'))) {
+if (!fs.existsSync(path.join(os.homedir(), 'kci.config.js'))) {
 	fs.copyFileSync(
 		path.join(__dirname, 'nvrjs.config.example.js'),
-		path.join(os.homedir(), 'nvrjs.config.js')
+		path.join(os.homedir(), 'kci.config.js')
 	);
 	console.log(
-		' - New config created: ' + path.join(os.homedir(), 'nvrjs.config.js')
+		' - New config created: ' + path.join(os.homedir(), 'kci.config.js')
 	);
 	console.log(' - Edit config to suite and restart!');
 	process.exit(0);
 }
-const config = require(path.join(os.homedir(), 'nvrjs.config.js'));
-console.log(' - Config loaded: ' + path.join(os.homedir(), 'nvrjs.config.js'));
+const config = require(path.join(os.homedir(), 'kci.config.js'));
+console.log(' - Config loaded: ' + path.join(os.homedir(), 'kci.config.js'));
 
 const SensorTimestamps = {};
 
