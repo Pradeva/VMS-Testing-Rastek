@@ -1,6 +1,5 @@
 const express = require('express');
 const cookieparser = require('cookie-parser');
-const cookie = require('cookie');
 const bcrypt = require('bcrypt');
 const http = require('http');
 const io = require('socket.io');
@@ -11,9 +10,7 @@ const fs = require('fs');
 var cors = require('cors')
 const os = require('os');
 const path = require('path');
-const osu = require('node-os-utils');
 const dayjs = require('dayjs');
-const queue = require('queue-fifo');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 const RateLimiter = require('express-rate-limit');
@@ -32,8 +29,6 @@ if (!fs.existsSync(path.join(os.homedir(), 'kci.config.js'))) {
 }
 const config = require(path.join(os.homedir(), 'kci.config.js'));
 console.log(' - Config loaded: ' + path.join(os.homedir(), 'kci.config.js'));
-
-const SensorTimestamps = {};
 
 console.log(' - Checking volumes and ffmpeg.');
 
@@ -135,36 +130,6 @@ App.get('/getVideo/:path', (req, res) => {
 	res.json({message: "Success", data: videoFiles.map(filename => `/static/video/NVRJS_CAMERA_RECORDINGS/${req.params.path}/${filename}`)});
 })
 
-// System Info
-App.get('/api/:APIKey/systeminfo', (req, res) => {
-	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
-		getSystemInfo(req, res);
-	} else {
-		res.status(401);
-		res.end();
-	}
-});
-App.get('/systeminfo', (req, res) => {
-	getSystemInfo(req, res);
-});
-
-function getSystemInfo(req, res) {
-	osu.cpu.usage().then((CPU) => {
-		osu.drive.info(config.system.storageVolume).then((DISK) => {
-			osu.mem.info().then((MEM) => {
-				const Info = {
-					CPU: CPU,
-					DISK: DISK,
-					MEM: MEM
-				};
-				res.type('application/json');
-				res.status(200);
-				res.end(JSON.stringify(Info));
-			});
-		});
-	});
-}
-
 // get Cameras
 App.get('/api/:APIKey/cameras', (req, res) => {
 	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
@@ -184,66 +149,6 @@ App.get('/api/:APIKey/cameras', (req, res) => {
 	}
 });
 
-// Snapshot
-App.get('/snapshot/:CameraID/:Width', (req, res) => {
-	getSnapShot(res, req.params.CameraID, req.params.Width);
-});
-
-App.get('/api/:APIKey/snapshot/:CameraID/:Width', (req, res) => {
-	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
-		getSnapShot(res, req.params.CameraID, req.params.Width);
-	} else {
-		res.status(401);
-		res.end();
-	}
-});
-
-function getSnapShot(Res, CameraID, Width) {
-	const CommandArgs = [];
-	const Cam = config.cameras[CameraID];
-
-	Object.keys(Cam.inputConfig).forEach((inputConfigKey) => {
-		CommandArgs.push('-' + inputConfigKey);
-		if (Cam.inputConfig[inputConfigKey].length > 0) {
-			CommandArgs.push(Cam.inputConfig[inputConfigKey]);
-		}
-	});
-
-	CommandArgs.push('-i');
-	CommandArgs.push(Cam.input);
-	CommandArgs.push('-vf');
-	CommandArgs.push('scale=' + Width + ':-1');
-	CommandArgs.push('-vframes');
-	CommandArgs.push('1');
-	CommandArgs.push('-f');
-	CommandArgs.push('image2');
-	CommandArgs.push('-');
-
-	const Process = childprocess.spawn(
-		config.system.ffmpegLocation,
-		CommandArgs,
-		{ env: process.env, stderr: 'ignore' }
-	);
-
-	let imageBuffer = Buffer.alloc(0);
-
-	Process.stdout.on('data', function (data) {
-		imageBuffer = Buffer.concat([imageBuffer, data]);
-	});
-
-	Process.on('exit', (Code, Signal) => {
-		const _Error = FFMPEGExitDueToError(Code, Signal);
-		if (!_Error) {
-			Res.type('image/jpeg');
-			Res.status(200);
-			Res.end(Buffer.from(imageBuffer, 'binary'));
-		} else {
-			Res.status(500);
-			Res.end();
-		}
-	});
-}
-
 const Processors = {};
 const Cameras = Object.keys(config.cameras);
 Cameras.forEach((cameraID) => {
@@ -251,18 +156,6 @@ Cameras.forEach((cameraID) => {
 	InitCamera(Cam, cameraID);
 
 });
-
-function FFMPEGExitDueToError(Code, Signal) {
-	if (Code == null && Signal === 'SIGKILL') {
-		return false;
-	}
-	if (Code === 255 && Signal == null) {
-		return false;
-	}
-	if (Code > 0 && Code < 255 && Signal == null) {
-		return true;
-	}
-}
 
 function InitCamera(Cam, cameraID) {
 	console.log(' - Configuring camera: ' + Cam.name);
@@ -396,25 +289,6 @@ function InitCamera(Cam, cameraID) {
 	Processors[cameraID] = {
 		CameraInfo: Cam
 	};
-}
-function generateUUID() {
-	var d = new Date().getTime();
-	var d2 =
-		(typeof performance !== 'undefined' &&
-			performance.now &&
-			performance.now() * 1000) ||
-		0;
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = Math.random() * 16;
-		if (d > 0) {
-			r = (d + r) % 16 | 0;
-			d = Math.floor(d / 16);
-		} else {
-			r = (d2 + r) % 16 | 0;
-			d2 = Math.floor(d2 / 16);
-		}
-		return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-	});
 }
 
 HTTP.listen(config.system.interfacePort);
