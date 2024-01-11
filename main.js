@@ -18,7 +18,7 @@ const RateLimiter = require('express-rate-limit');
 console.log(' - Checking config.');
 if (!fs.existsSync(path.join(os.homedir(), 'kci.config.js'))) {
 	fs.copyFileSync(
-		path.join(__dirname, 'nvrjs.config.example.js'),
+		path.join(__dirname, 'kci.config.example.js'),
 		path.join(os.homedir(), 'kci.config.js')
 	);
 	console.log(
@@ -38,17 +38,12 @@ if (!fs.existsSync(config.system.storageVolume)) {
 } else {
 	try {
 		if (
-			!fs.existsSync(path.join(config.system.storageVolume, 'NVRJS_SYSTEM'))
-		) {
-			fs.mkdirSync(path.join(config.system.storageVolume, 'NVRJS_SYSTEM'));
-		}
-		if (
 			!fs.existsSync(
-				path.join(config.system.storageVolume, 'NVRJS_CAMERA_RECORDINGS')
+				path.join(config.system.storageVolume, 'CAMERA_RECORDINGS')
 			)
 		) {
 			fs.mkdirSync(
-				path.join(config.system.storageVolume, 'NVRJS_CAMERA_RECORDINGS')
+				path.join(config.system.storageVolume, 'CAMERA_RECORDINGS')
 			);
 		}
 	} catch (e) {
@@ -124,10 +119,10 @@ App.get('/dashboard', (req, res) => {
 });
 
 App.get('/getVideo/:path', (req, res) => {
-	const directoryPath = `./web/static/video/NVRJS_CAMERA_RECORDINGS/${req.params.path}`;
+	const directoryPath = `./web/static/video/CAMERA_RECORDINGS/${req.params.path}`;
 	const files = fs.readdirSync(directoryPath);
 	const videoFiles = files.filter(file => file.endsWith('.mp4'));
-	res.json({message: "Success", data: videoFiles.map(filename => `/static/video/NVRJS_CAMERA_RECORDINGS/${req.params.path}/${filename}`)});
+	res.json({message: "Success", data: videoFiles.map(filename => `/static/video/CAMERA_RECORDINGS/${req.params.path}/${filename}`)});
 })
 
 // get Cameras
@@ -179,7 +174,7 @@ function InitCamera(Cam, cameraID) {
 		express.static(
 			path.join(
 				config.system.storageVolume,
-				'NVRJS_CAMERA_RECORDINGS',
+				'CAMERA_RECORDINGS',
 				cameraID
 			),
 			{ acceptRanges: true }
@@ -188,7 +183,7 @@ function InitCamera(Cam, cameraID) {
 
 	const Path = path.join(
 		config.system.storageVolume,
-		'NVRJS_CAMERA_RECORDINGS',
+		'CAMERA_RECORDINGS',
 		cameraID
 	);
 	if (!fs.existsSync(Path)) {
@@ -225,7 +220,7 @@ function InitCamera(Cam, cameraID) {
 	});
 
 	CommandArgs.push('-metadata');
-	CommandArgs.push('title="NVR JS Stream"');
+	CommandArgs.push('title="Stream"');
 	CommandArgs.push('pipe:3');
 
 	const Options = {
@@ -292,4 +287,4 @@ function InitCamera(Cam, cameraID) {
 }
 
 HTTP.listen(config.system.interfacePort);
-console.log(' - NVR JS is Ready!');
+console.log(' - VMS is Ready!');
