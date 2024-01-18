@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<script>
+let buffer = [];
+let socket = [];
+let VE = [];
+let mediaSource = [];
+let DataURL = [];
+let BR = [];
+
+function filterData(dataTable) {
+
+  // Menjalankan console.log(ipEdge) setelah AJAX selesai
+    $.ajax({
+      type: "GET",
+      url: "http://localhost:7878/api/cameras",
+      dataType: "json",
+      success: function (response) {
+        $.each(response.data, function (k, v) {
+          console.log(v.id);
+          console.log("videoElement"+(k+1));
+
+          BR[k] = document.getElementById("buttonRecord"+(k+1));
+          BR[k].onclick = function(){
+            showModalRecord(v.id);
+          }
+
+
+          VE[k] = document.getElementById("videoElement"+(k+1));
+          mediaSource[k] = new MediaSource();
+          DataURL[k] = URL.createObjectURL(mediaSource[k]);
+          VE[k].src = DataURL[k];
+
+          mediaSource[k].addEventListener('sourceopen', function (e) {
+              buffer[k] = mediaSource[k].addSourceBuffer(Codec);
+              buffer[k].mode = 'sequence';
+              buffer[k].addEventListener('updateend', function (e) {
+                  if (
+                      mediaSource[k].duration !== Number.POSITIVE_INFINITY &&
+                      VE[k].currentTime === 0 &&
+                      mediaSource[k].duration > 0
+                  ) {
+                      VE[k].currentTime = mediaSource[k].duration - 1;
+                      mediaSource[k].duration = Number.POSITIVE_INFINITY;
+                  }
+
+                  VE[k].play();
+              });
+
+              socket[k] = io('http://10.202.0.130:7878/', { path: '/streams/' + v.id});
+              socket[k].on('segment', function (data) {
+                  data = new Uint8Array(data);
+                  buffer[k].appendBuffer(data);
+              });
+          });
+        });
+      },
+      error: function (xhr, status, error) {
+        console.log('error data camera');
+        console.log('Status:', status);
+        console.log('Error:', error);
+      },
+    })
+    
+
+    dataTable.ajax.url(newUrl);
+    dataTable.ajax.reload();
+}
+</script>
+
+
+</html>

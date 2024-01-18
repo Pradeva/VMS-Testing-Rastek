@@ -73,51 +73,7 @@ App.use(express.json());
 App.use(cookieparser(config.system.cookieKey));
 const HTTP = new http.Server(App);
 
-console.log(' - Compiling pages.');
-const CompiledPages = {};
-const Pages = {
-	Dash: path.join(__dirname, 'web', 'dash.html'),
-	Index: path.join(__dirname, 'web', 'index.html')
-};
-Object.keys(Pages).forEach((PS) => {
-	CompiledPages[PS] = handlebars.compile(fs.readFileSync(Pages[PS], 'utf8'));
-});
-
-// Static
-App.use('/static', express.static(path.join(__dirname, 'web', 'static')));
-
-// UI
-App.get('/', (req, res) => {
-	res.type('text/html');
-	res.status(200);
-	res.end(CompiledPages.Index());
-});
-App.post('/login', (req, res) => {
-	const Data = req.body;
-	const Password = Data.password;
-	const Username = Data.username;
-
-	if (
-		bcrypt.compareSync(Password, config.system.password) &&
-		config.system.username === Username
-	) {
-		res.cookie('Authentication', 'Success', {
-			signed: true
-		});
-		res.status(204);
-		res.end();
-	} else {
-		res.status(401);
-		res.end();
-	}
-});
-
-App.get('/dashboard', (req, res) => {
-	res.type('text/html');
-	res.status(200);
-	res.end(CompiledPages.Dash(config));
-});
-
+// get Videos
 App.get('/getVideo/:path', (req, res) => {
 	const directoryPath = `./web/static/video/CAMERA_RECORDINGS/${req.params.path}`;
 	const files = fs.readdirSync(directoryPath);
@@ -126,22 +82,17 @@ App.get('/getVideo/:path', (req, res) => {
 })
 
 // get Cameras
-App.get('/api/:APIKey/cameras', (req, res) => {
-	if (bcrypt.compareSync(req.params.APIKey, config.system.apiKey)) {
-		const Cams = [];
+App.get('/api/cameras', (req, res) => {
+	const Cams = [];
 
-		Object.keys(config.cameras).forEach((ID) => {
-			const Cam = config.cameras[ID];
-			Cams.push({ id: ID, name: Cam.name, continuous: Cam.continuous });
-		});
+	Object.keys(config.cameras).forEach((ID) => {
+		const Cam = config.cameras[ID];
+		Cams.push({ id: ID, name: Cam.name, continuous: Cam.continuous });
+	});
 
-		res.type('application/json');
-		res.status(200);
-		res.end(JSON.stringify(Cams));
-	} else {
-		res.status(401);
-		res.end();
-	}
+	res.type('application/json');
+	res.status(200);
+	res.end(JSON.stringify(Cams));
 });
 
 const Processors = {};
@@ -209,7 +160,7 @@ function InitCamera(Cam, cameraID) {
 		CommandArgs.push('pipe:4');
 		CommandArgs.push('-segment_time');
 		CommandArgs.push(60 * config.system.continuousSegTimeMinutes);
-		CommandArgs.push(path.join(Path, '%Y-%m-%dT%H-%M-%S.mp4'));
+		CommandArgs.push(path.join(Path, '%Y-%m-%dT%H:%M:%S.mp4'));
 	}
 
 	Object.keys(Cam.liveConfig.streamConfig).forEach((streamingConfigKey) => {
