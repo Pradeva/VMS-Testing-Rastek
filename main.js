@@ -81,6 +81,9 @@ App.get('/getVideo/:path', (req, res) => {
 	res.json({message: "Success", data: videoFiles.map(filename => `/static/video/CAMERA_RECORDINGS/${req.params.path}/${filename}`)});
 })
 
+// Static
+App.use('/static', express.static(path.join(__dirname, 'web', 'static')));
+
 // get Cameras
 App.get('/api/cameras', (req, res) => {
 	const Cams = [];
